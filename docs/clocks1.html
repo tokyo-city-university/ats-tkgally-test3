@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3つの時計</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    font-family: "Helvetica Neue", Arial, "Hiragino Sans", sans-serif;
+  }
+
+  .panel {
+    flex: 1 1 33.33%;
+    min-width: 300px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    gap: 20px;
+  }
+
+  /* ---------- 1. アナログ時計（クラシック・ウッド調） ---------- */
+  .analog {
+    background: radial-gradient(circle at 50% 40%, #f7ecd6 0%, #e0c79a 70%, #c9a46c 100%);
+    color: #3b2a1a;
+  }
+  .analog .label { font-family: Georgia, "Times New Roman", serif; letter-spacing: 0.2em; text-transform: uppercase; font-size: 14px; }
+  .analog svg { width: min(80vw, 340px); height: auto; filter: drop-shadow(0 12px 18px rgba(59,42,26,0.35)); }
+  .analog .digits { font-family: Georgia, serif; font-size: 16px; color: #5a3d20; }
+
+  /* ---------- 2. デジタル時計（ネオン・シンセウェーブ） ---------- */
+  .neon {
+    background: linear-gradient(160deg, #0d0221 0%, #261447 50%, #120136 100%);
+    color: #ff4fd8;
+  }
+  .neon .label { color: #00f0ff; letter-spacing: 0.4em; font-size: 14px; text-transform: uppercase; }
+  .neon .time {
+    font-family: "Courier New", monospace;
+    font-size: clamp(48px, 8vw, 84px);
+    font-weight: bold;
+    color: #ff4fd8;
+    text-shadow: 0 0 6px #ff4fd8, 0 0 18px #ff4fd8, 0 0 40px #ff00aa;
+    letter-spacing: 0.05em;
+  }
+  .neon .date {
+    font-family: "Courier New", monospace;
+    font-size: 18px;
+    color: #00f0ff;
+    text-shadow: 0 0 8px #00f0ff;
+  }
+  .neon .bar {
+    width: 70%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+    box-shadow: 0 0 10px #00f0ff;
+  }
+
+  /* ---------- 3. バイナリ時計（マトリックス風・黒と緑） ---------- */
+  .binary {
+    background: #050805;
+    color: #39ff14;
+    font-family: "Courier New", monospace;
+  }
+  .binary .label { color: #1f8a0f; letter-spacing: 0.3em; font-size: 13px; text-transform: uppercase; }
+  .binary .grid { display: grid; grid-template-columns: auto repeat(6, 1fr); gap: 14px 10px; align-items: center; }
+  .binary .unit { color: #1f8a0f; font-size: 13px; text-align: right; padding-right: 6px; }
+  .binary .dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid #1f5f12;
+    background: #0b1a0b;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .binary .dot.on {
+    background: #39ff14;
+    border-color: #39ff14;
+    box-shadow: 0 0 12px #39ff14, 0 0 24px rgba(57,255,20,0.5);
+  }
+  .binary .readout { font-size: 20px; color: #39ff14; text-shadow: 0 0 8px #39ff14; }
+</style>
+</head>
+<body>
+
+  <!-- 1. アナログ時計 -->
+  <section class="panel analog">
+    <div class="label">Analog</div>
+    <svg viewBox="0 0 200 200" aria-label="アナログ時計">
+      <defs>
+        <radialGradient id="face" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#fffdf5"/>
+          <stop offset="100%" stop-color="#eadbb8"/>
+        </radialGradient>
+      </defs>
+      <circle cx="100" cy="100" r="96" fill="#6b4a2b"/>
+      <circle cx="100" cy="100" r="90" fill="url(#face)" stroke="#3b2a1a" stroke-width="2"/>
+      <!-- 目盛り -->
+      <g id="ticks" stroke="#3b2a1a"></g>
+      <!-- 数字 -->
+      <g id="numbers" font-family="Georgia, serif" font-size="13" fill="#3b2a1a" text-anchor="middle" dominant-baseline="central"></g>
+      <!-- 針 -->
+      <line id="hour" x1="100" y1="106" x2="100" y2="58" stroke="#3b2a1a" stroke-width="5" stroke-linecap="round"/>
+      <line id="minute" x1="100" y1="112" x2="100" y2="38" stroke="#3b2a1a" stroke-width="3" stroke-linecap="round"/>
+      <line id="second" x1="100" y1="122" x2="100" y2="30" stroke="#b5452a" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="100" cy="100" r="4" fill="#b5452a"/>
+      <circle cx="100" cy="100" r="1.5" fill="#fffdf5"/>
+    </svg>
+    <div class="digits" id="analogDigits"></div>
+  </section>
+
+  <!-- 2. デジタル時計 -->
+  <section class="panel neon">
+    <div class="label">Neon Digital</div>
+    <div class="time" id="neonTime">--:--:--</div>
+    <div class="bar"></div>
+    <div class="date" id="neonDate"></div>
+  </section>
+
+  <!-- 3. バイナリ時計 -->
+  <section class="panel binary">
+    <div class="label">Binary</div>
+    <div class="grid" id="binaryGrid"></div>
+    <div class="readout" id="binaryReadout"></div>
+  </section>
+
+<script>
+  // ---------- アナログ時計のセットアップ ----------
+  const ticksG = document.getElementById('ticks');
+  const numbersG = document.getElementById('numbers');
+  const NS = 'http://www.w3.org/2000/svg';
+  for (let i = 0; i < 60; i++) {
+    const angle = (i * 6) * Math.PI / 180;
+    const major = i % 5 === 0;
+    const r1 = major ? 76 : 82;
+    const r2 = 88;
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', 100 + r1 * Math.sin(angle));
+    line.setAttribute('y1', 100 - r1 * Math.cos(angle));
+    line.setAttribute('x2', 100 + r2 * Math.sin(angle));
+    line.setAttribute('y2', 100 - r2 * Math.cos(angle));
+    line.setAttribute('stroke-width', major ? 2.5 : 1);
+    ticksG.appendChild(line);
+  }
+  for (let n = 1; n <= 12; n++) {
+    const angle = (n * 30) * Math.PI / 180;
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', 100 + 66 * Math.sin(angle));
+    t.setAttribute('y', 100 - 66 * Math.cos(angle));
+    t.textContent = n;
+    numbersG.appendChild(t);
+  }
+
+  const hourHand = document.getElementById('hour');
+  const minuteHand = document.getElementById('minute');
+  const secondHand = document.getElementById('second');
+  const analogDigits = document.getElementById('analogDigits');
+
+  // ---------- デジタル時計 ----------
+  const neonTime = document.getElementById('neonTime');
+  const neonDate = document.getElementById('neonDate');
+  const DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
+  // ---------- バイナリ時計 ----------
+  // 各桁（時・分・秒の十の位と一の位）を4ビットで表示
+  const binaryGrid = document.getElementById('binaryGrid');
+  const binaryReadout = document.getElementById('binaryReadout');
+  const columns = ['時', '分', '秒'];
+  const binaryCells = []; // [unit][digit][bit]
+  const rowLabels = ['8', '4', '2', '1'];
+  // 行ヘッダー（ビット値）
+  const headerEmpty = document.createElement('div');
+  binaryGrid.appendChild(headerEmpty);
+  for (const c of columns) {
+    const h = document.createElement('div');
+    h.className = 'unit';
+    h.style.gridColumn = 'span 2';
+    h.style.textAlign = 'center';
+    h.textContent = c;
+    binaryGrid.appendChild(h);
+  }
+  // 行ごとに4行（8,4,2,1）× 6列（時十・時一・分十・分一・秒十・秒一）
+  const dots = [];
+  for (let bit = 0; bit < 4; bit++) {
+    const label = document.createElement('div');
+    label.className = 'unit';
+    label.textContent = rowLabels[bit];
+    binaryGrid.appendChild(label);
+    const row = [];
+    for (let col = 0; col < 6; col++) {
+      const d = document.createElement('div');
+      d.className = 'dot';
+      binaryGrid.appendChild(d);
+      row.push(d);
+    }
+    dots.push(row);
+  }
+
+  const pad = n => String(n).padStart(2, '0');
+
+  function setBinaryDigit(colIndex, value) {
+    // value は 0〜9 の1桁。4ビット表示（上位ビットが8）
+    const bitsValues = [8, 4, 2, 1];
+    bitsValues.forEach((bv, i) => {
+      dots[i][colIndex].classList.toggle('on', (value & bv) !== 0);
+    });
+  }
+
+  function update() {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    const ms = now.getMilliseconds();
+
+    // アナログ
+    const secFrac = s + ms / 1000;
+    const minFrac = m + secFrac / 60;
+    const hourFrac = (h % 12) + minFrac / 60;
+    secondHand.setAttribute('transform', `rotate(${secFrac * 6} 100 100)`);
+    minuteHand.setAttribute('transform', `rotate(${minFrac * 6} 100 100)`);
+    hourHand.setAttribute('transform', `rotate(${hourFrac * 30} 100 100)`);
+    analogDigits.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+    // デジタル
+    neonTime.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+    neonDate.textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日（${DAYS[now.getDay()]}）`;
+
+    // バイナリ（時十・時一・分十・分一・秒十・秒一）
+    const digits = [Math.floor(h / 10), h % 10, Math.floor(m / 10), m % 10, Math.floor(s / 10), s % 10];
+    digits.forEach((d, col) => setBinaryDigit(col, d));
+    binaryReadout.textContent = `${pad(h)} : ${pad(m)} : ${pad(s)}`;
+  }
+
+  update();
+  setInterval(update, 100);
+</script>
+</body>
+</html>
